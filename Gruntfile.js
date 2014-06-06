@@ -186,6 +186,26 @@ module.exports = function (grunt) {
         }]
       }
     },
+    ngtemplates: {
+        dist: {
+            options: {
+                module: 'de.cismet.crisma.widgets.worldstateTreeWidget.directives',
+                htmlmin:  '<%= htmlmin.deploy %>',
+                usemin: 'scripts/crisma-worldstate-tree-widget-angular.min.js'
+            },
+            cwd: '<%= yeoman.app %>',
+            src: 'templates/**.html',
+            dest: '<%= yeoman.dist %>/scripts/crisma-worldstate-tree-widget-angular.min.js'
+        },
+        deploy: {
+            options: {
+                module: 'de.cismet.crisma.widgets.worldstateTreeWidget.directives'
+            },
+            cwd: '<%= yeoman.app %>',
+            src: 'templates/**.html',
+            dest: '<%= yeoman.dist %>/scripts/crisma-worldstate-tree-widget-angular-tpl.js'
+        }
+    },
     // we do this since the grunt-google-cdn plugin is stale, quick and dirty
     replace: {
         cdnify: {
@@ -209,6 +229,13 @@ module.exports = function (grunt) {
                 {from: /if\s*\(\s*DEBUG\s*\)\s*\{\s*console\s*\.\s*log\s*\(\s*('|").*\1??\s*\)\s*;?\s*\}/g, to: ''}
             ]
             
+        }
+    },
+    uglify: {
+        my_target: {
+            files: {
+                'dist/scripts/icmm_js.min.js': ['<%= yeoman.dist %>/scripts/*.js']
+            }
         }
     },
     echoMessage: {
@@ -252,7 +279,7 @@ module.exports = function (grunt) {
     'clean:deploy',
     'ngmin',
     'replace:debugCode',
-//    'rev',
+    'uglify',
     'echoMessage'
   ]);
 
