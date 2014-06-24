@@ -18,7 +18,7 @@ angular.module(
                 var hasChilds, node, that, getChildrenFunc = function (callback) {
                     that = this;
                     $timeout(function () {
-                        Nodes.children({filter: 'parentworldstate.id:' + that.object.id}, callback);
+                        Nodes.children({filter: 'parentworldstate.id:' + Nodes.utils.getRequestIdForNodeKey(that.key)}, callback);
                     }, 1000);
                 };
                 if (!ws) {
@@ -47,6 +47,7 @@ angular.module(
                     iconFactory: null,
                     policy: 'default',
                     leaf: !hasChilds,
+                    isLeaf: !hasChilds,
 //                  object: ws,
                     // we augment the node object of the rest api with a method how the children are generated
                     getChildren: getChildrenFunc
