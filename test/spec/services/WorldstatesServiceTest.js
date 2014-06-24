@@ -5,7 +5,6 @@ describe('WorldstatesServiceTest', function () {
     // load the controller's module
     beforeEach(function(){
         // we mock the constants necessary for the Worldstates Service
-        module('templates');
         module(function($provide){
             $provide.constant('CRISMA_DOMAIN', 'CRISMA');
             $provide.constant('CRISMA_ICMM_API', 'http://localhost:8890');
