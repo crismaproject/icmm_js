@@ -6,3 +6,4 @@ app/bower_components/
 .idea
 dist/*
 !dist/scripts
+nbproject/private
