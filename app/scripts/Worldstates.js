@@ -195,7 +195,7 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource', 'de.cismet.cr
             };
             return publicApi;
         };
-        Context.addApiListener(function (newUrl) {
+        Context.addApiListener(function () {
             Worldstate = $resource(Context.getIcmmApi() + '/' + 'CRISMA' + '.worldstates/:wsId', {
                 wsId: '@id',
                 deduplicate: false,

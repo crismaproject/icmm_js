@@ -125,11 +125,11 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource', 'de.cis
             'delete': function () {
                 return Nodes.delete.apply(this, arguments);
             },
-            children: function () {
-                 return Nodes.children.apply(this, arguments);
+            'children': function () {
+                return Nodes.children.apply(this, arguments);
             }
         };
-        Context.addApiListener(function (newUrl) {
+        Context.addApiListener(function () {
             Nodes = $resource(Context.getIcmmApi() + '/nodes', {
                 nodeId: '@id',
                 domain: Context.getDomain()

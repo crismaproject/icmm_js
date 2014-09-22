@@ -1,17 +1,18 @@
-function Context (icmmApiUrl) {
-    var icmm_api, domain, listeners;
+function Context(icmmApiUrl) {
+    'use strict';
+    var icmmApi, domain, listeners;
     domain = 'CRISMA';
     listeners = [];
-    icmm_api = icmmApiUrl;
+    icmmApi = icmmApiUrl;
     this.getIcmmApi = function () {
-        return icmm_api;
+        return icmmApi;
     };
     this.getDomain = function () {
         return domain;
     };
     this.setIcmmApi = function (url) {
         var i;
-        icmm_api = url;
+        icmmApi = url;
         for (i = 0; i < listeners.length; i++) {
             listeners[i]();
         }
@@ -20,15 +21,17 @@ function Context (icmmApiUrl) {
         listeners.push(callback);
     };
 }
-angular.module('de.cismet.crisma.ICMM.config', []).provider('Context',
-    function ContextProvider () {
-        var icmm_api = 'foo';
+angular.module('de.cismet.crisma.ICMM.config', []).provider(
+    'Context',
+    function ContextProvider() {
+        'use strict';
+        var icmmApi = 'foo';
         this.setInitialIcmmApi = function (url) {
-            icmm_api = url;
+            icmmApi = url;
         };
 
-        this.$get = ['$q', function contextFactory ($q) {
-                return new Context(icmm_api);
-            }];
+        this.$get = ['$q', function contextFactory() {
+            return new Context(icmmApi);
+        }];
     }
 );
