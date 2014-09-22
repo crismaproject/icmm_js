@@ -1,16 +1,54 @@
-angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource']).factory('de.cismet.collidingNameService.Nodes', [
+function Context(icmmApiUrl) {
+  'use strict';
+  var icmmApi, domain, listeners;
+  domain = 'CRISMA';
+  listeners = [];
+  icmmApi = icmmApiUrl;
+  this.getIcmmApi = function () {
+    return icmmApi;
+  };
+  this.getDomain = function () {
+    return domain;
+  };
+  this.setIcmmApi = function (url) {
+    var i;
+    icmmApi = url;
+    for (i = 0; i < listeners.length; i++) {
+      listeners[i]();
+    }
+  };
+  this.addApiListener = function (callback) {
+    listeners.push(callback);
+  };
+}
+angular.module('de.cismet.crisma.ICMM.config', []).provider('Context', function ContextProvider() {
+  'use strict';
+  var icmmApi = 'foo';
+  this.setInitialIcmmApi = function (url) {
+    icmmApi = url;
+  };
+  this.$get = [
+    '$q',
+    function contextFactory() {
+      return new Context(icmmApi);
+    }
+  ];
+});
+angular.module('de.cismet.cids.rest.collidngNames.Nodes', [
+  'ngResource',
+  'de.cismet.crisma.ICMM.config'
+]).factory('de.cismet.collidingNameService.Nodes', [
   '$resource',
   '$timeout',
-  'CRISMA_ICMM_API',
-  'CRISMA_DOMAIN',
-  function ($resource, $timeout, CRISMA_ICMM_API, CRISMA_DOMAIN) {
+  'Context',
+  function ($resource, $timeout, Context) {
     'use strict';
-    var transformResults, transformSingleResult, Nodes, utils;
+    var transformResults, transformSingleResult, Nodes, NodesFacade, utils;
     transformSingleResult = function (ws) {
       var hasChilds, node, that, getChildrenFunc = function (callback) {
           that = this;
           $timeout(function () {
-            Nodes.children({ filter: 'parentworldstate.id:' + Nodes.utils.getRequestIdForNodeKey(that.key) }, callback);
+            NodesFacade.children({ filter: 'parentworldstate.id:' + NodesFacade.utils.getRequestIdForNodeKey(that.key) }, callback);
           }, 1000);
         };
       if (!ws) {
@@ -52,14 +90,14 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource']).factor
       }
       return res;
     };
-    Nodes = $resource(CRISMA_ICMM_API + '/nodes', {
+    Nodes = $resource(Context.getIcmmApi() + '/nodes', {
       nodeId: '@id',
-      domain: CRISMA_DOMAIN
+      domain: Context.getDomain()
     }, {
       get: {
         method: 'GET',
         params: { deduplicate: true },
-        url: CRISMA_ICMM_API + '/' + CRISMA_DOMAIN + '.worldstates/' + ':nodeId?omitNullValues=false&deduplicate=true',
+        url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates/' + ':nodeId?omitNullValues=false&deduplicate=true',
         transformResponse: function (data) {
           var ws;
           if (!data) {
@@ -72,7 +110,7 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource']).factor
       query: {
         method: 'GET',
         isArray: true,
-        url: CRISMA_ICMM_API + '/' + CRISMA_DOMAIN + '.worldstates?limit=100&offset=0&level=1&filter=parentworldstate%3Anull&omitNullValues=false&deduplicate=true',
+        url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates?limit=100&offset=0&level=1&filter=parentworldstate%3Anull&omitNullValues=false&deduplicate=true',
         transformResponse: function (data) {
           return transformResults(data);
         }
@@ -81,7 +119,7 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource']).factor
         method: 'GET',
         isArray: true,
         params: { level: 2 },
-        url: CRISMA_ICMM_API + '/' + CRISMA_DOMAIN + '.worldstates',
+        url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates',
         transformResponse: function (data) {
           return transformResults(data);
         },
@@ -96,7 +134,7 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource']).factor
       scenarios: {
         method: 'GET',
         isArray: true,
-        url: CRISMA_ICMM_API + '/' + CRISMA_DOMAIN + '.worldstates?level=5&filter=childworldstates:\\[\\]&omitNullValues=false&deduplicate=true',
+        url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates?level=5&filter=childworldstates:\\[\\]&omitNullValues=false&deduplicate=true',
         transformResponse: function (data) {
           return transformResults(data);
         }
@@ -113,15 +151,86 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', ['ngResource']).factor
         return nodeKey;
       }
     };
-    Nodes.utils = utils;
-    return Nodes;
+    NodesFacade = {
+      'get': function () {
+        return Nodes.get.apply(this, arguments);
+      },
+      'query': function () {
+        return Nodes.query.apply(this, arguments);
+      },
+      'remove': function () {
+        return Nodes.remove.apply(this, arguments);
+      },
+      'delete': function () {
+        return Nodes.delete.apply(this, arguments);
+      },
+      'children': function () {
+        return Nodes.children.apply(this, arguments);
+      }
+    };
+    Context.addApiListener(function () {
+      Nodes = $resource(Context.getIcmmApi() + '/nodes', {
+        nodeId: '@id',
+        domain: Context.getDomain()
+      }, {
+        get: {
+          method: 'GET',
+          params: { deduplicate: true },
+          url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates/' + ':nodeId?omitNullValues=false&deduplicate=true',
+          transformResponse: function (data) {
+            var ws;
+            if (!data) {
+              return null;
+            }
+            ws = JSON.parse(data);
+            return transformSingleResult(ws);
+          }
+        },
+        query: {
+          method: 'GET',
+          isArray: true,
+          url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates?limit=100&offset=0&level=1&filter=parentworldstate%3Anull&omitNullValues=false&deduplicate=true',
+          transformResponse: function (data) {
+            return transformResults(data);
+          }
+        },
+        children: {
+          method: 'GET',
+          isArray: true,
+          params: { level: 2 },
+          url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates',
+          transformResponse: function (data) {
+            return transformResults(data);
+          },
+          dynamicChildren: {
+            method: 'POST',
+            url: '',
+            transformResult: function (data) {
+              return transformResults(data);
+            }
+          }
+        },
+        scenarios: {
+          method: 'GET',
+          isArray: true,
+          url: Context.getIcmmApi() + '/' + Context.getDomain() + '.worldstates?level=5&filter=childworldstates:\\[\\]&omitNullValues=false&deduplicate=true',
+          transformResponse: function (data) {
+            return transformResults(data);
+          }
+        }
+      });
+    });
+    NodesFacade.utils = utils;
+    return NodesFacade;
   }
 ]);
-angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource']).factory('de.cismet.crisma.ICMM.Worldstates', [
+angular.module('de.cismet.crisma.ICMM.Worldstates', [
+  'ngResource',
+  'de.cismet.crisma.ICMM.config'
+]).factory('de.cismet.crisma.ICMM.Worldstates', [
   '$resource',
-  'CRISMA_ICMM_API',
-  'CRISMA_DOMAIN',
-  function ($resource, CRISMA_ICMM_API, CRISMA_DOMAIN) {
+  'Context',
+  function ($resource, Context) {
     'use strict';
     var augmentWorldstateWithICCData = function (worldstate) {
         var oldIndicators;
@@ -205,6 +314,9 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource']).factory('de.
         var regionMergeId = 'regionHelperLayer';
         var backgroundMergeId = 'backgroundHelperLayer';
         var i, renderingdescriptor, dataslot;
+        if (!worldstate.worldstatedata) {
+          return;
+        }
         for (i = 0; i < worldstate.worldstatedata.length; i++) {
           renderingdescriptor = worldstate.worldstatedata[i].renderingdescriptor[0];
           dataslot = worldstate.worldstatedata[i];
@@ -249,7 +361,7 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource']).factory('de.
           augmentWorldstateDataWithRenderingDescriptors(worldstatesArr[i]);
         }
         return worldstatesArr;
-      }, Worldstate = $resource(CRISMA_ICMM_API + '/' + CRISMA_DOMAIN + '.worldstates/:wsId', {
+      }, Worldstate = $resource(Context.getIcmmApi() + '/' + 'CRISMA' + '.worldstates/:wsId', {
         wsId: '@id',
         deduplicate: false,
         level: '5',
@@ -268,7 +380,20 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource']).factory('de.
           },
           transformResponse: processResults
         }
-      }), worldstateUtils = function () {
+      }), WorldstateFacade = {
+        'get': function () {
+          return Worldstate.get.apply(this, arguments);
+        },
+        'query': function () {
+          return Worldstate.query.apply(this, arguments);
+        },
+        'remove': function () {
+          return Worldstate.remove.apply(this, arguments);
+        },
+        'delete': function () {
+          return Worldstate.delete.apply(this, arguments);
+        }
+      }, worldstateUtils = function () {
         var publicApi;
         publicApi = {};
         publicApi.stripIccData = function (worldstates, forCriteria) {
@@ -299,7 +424,29 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource']).factory('de.
         };
         return publicApi;
       };
-    Worldstate.utils = worldstateUtils();
-    return Worldstate;
+    Context.addApiListener(function () {
+      Worldstate = $resource(Context.getIcmmApi() + '/' + 'CRISMA' + '.worldstates/:wsId', {
+        wsId: '@id',
+        deduplicate: false,
+        level: '5',
+        omitNullValues: 'false'
+      }, {
+        'get': {
+          method: 'GET',
+          transformResponse: processResult
+        },
+        'query': {
+          method: 'GET',
+          isArray: true,
+          params: {
+            level: '1',
+            omitNullValues: 'true'
+          },
+          transformResponse: processResults
+        }
+      });
+    });
+    WorldstateFacade.utils = worldstateUtils();
+    return WorldstateFacade;
   }
 ]);
