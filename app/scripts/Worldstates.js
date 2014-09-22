@@ -3,7 +3,7 @@ angular.module(
     [
         'ngResource'
     ]
-).factory(
+    ).factory(
     'de.cismet.crisma.ICMM.Worldstates',
     [
         '$resource',
@@ -55,15 +55,15 @@ angular.module(
                     }
                 ];
                 oldIndicators.categories = [{
-                    '$self': '/CRISMA.categories/2',
-                    'id': 2,
-                    'key': 'Indicators',
-                    'classification': {
-                        '$self': '/CRISMA.classifications/2',
+                        '$self': '/CRISMA.categories/2',
                         'id': 2,
-                        'key': 'ICC_DATA'
-                    }
-                }];
+                        'key': 'Indicators',
+                        'classification': {
+                            '$self': '/CRISMA.classifications/2',
+                            'id': 2,
+                            'key': 'ICC_DATA'
+                        }
+                    }];
                 worldstate.iccdata = [
                     oldIndicators,
 //                    {
@@ -163,28 +163,28 @@ angular.module(
                     renderingdescriptor = worldstate.worldstatedata[i].renderingdescriptor[0];
                     dataslot = worldstate.worldstatedata[i];
                     switch (dataslot.name) {
-                    case 'planet_osm_polygon':
-                    case 'ortho':
-                    case 'planet_osm_line':
-                    case 'planet_osm_point':
-                        renderingdescriptor.mergeId = osmMergeId;
-                        renderingdescriptor.priority = 20;
-                        break;
-                    case 'regione':
-                    case 'province':
-                    case 'comune_aq':
-                    case 'hospitals':
-                    case 'schools':
-                    case 'power_towers':
-                        renderingdescriptor.mergeId = regionMergeId;
-                        renderingdescriptor.priority = 30;
-                        break;
-                    case 'contour_dem_25':
-                    case 'zones':
-                    case 'clc2006':
-                        renderingdescriptor.mergeId = backgroundMergeId;
-                        renderingdescriptor.priority = 40;
-                        break;
+                        case 'planet_osm_polygon':
+                        case 'ortho':
+                        case 'planet_osm_line':
+                        case 'planet_osm_point':
+                            renderingdescriptor.mergeId = osmMergeId;
+                            renderingdescriptor.priority = 20;
+                            break;
+                        case 'regione':
+                        case 'province':
+                        case 'comune_aq':
+                        case 'hospitals':
+                        case 'schools':
+                        case 'power_towers':
+                            renderingdescriptor.mergeId = regionMergeId;
+                            renderingdescriptor.priority = 30;
+                            break;
+                        case 'contour_dem_25':
+                        case 'zones':
+                        case 'clc2006':
+                            renderingdescriptor.mergeId = backgroundMergeId;
+                            renderingdescriptor.priority = 40;
+                            break;
                     }
                 }
             }, processResult = function (worldstateData) {
@@ -193,8 +193,10 @@ angular.module(
                 }
                 var worldstate = JSON.parse(worldstateData);
                 augmentWorldstateWithICCData(worldstate);
-                augmentWorldstateDataWithRenderingDescriptors(worldstate);
-                mergeWMSLayer(worldstate);
+                if (worldstate.worldstateData) {
+                    augmentWorldstateDataWithRenderingDescriptors(worldstate);
+                    mergeWMSLayer(worldstate);
+                }
                 return worldstate;
             }, processResults = function (worldstates) {
                 var worldstatesArr = JSON.parse(worldstates).$collection, i;
@@ -257,4 +259,4 @@ angular.module(
             return Worldstate;
         }
     ]
-);
+    );
