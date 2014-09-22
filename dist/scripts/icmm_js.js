@@ -239,8 +239,10 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', ['ngResource']).factory('de.
         }
         var worldstate = JSON.parse(worldstateData);
         augmentWorldstateWithICCData(worldstate);
-        augmentWorldstateDataWithRenderingDescriptors(worldstate);
-        mergeWMSLayer(worldstate);
+        if (worldstate.worldstateData) {
+          augmentWorldstateDataWithRenderingDescriptors(worldstate);
+          mergeWMSLayer(worldstate);
+        }
         return worldstate;
       }, processResults = function (worldstates) {
         var worldstatesArr = JSON.parse(worldstates).$collection, i;
