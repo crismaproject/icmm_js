@@ -13,12 +13,12 @@
         "package.json"
     ],
     "dependencies": {
-        "angular": "1.2.15",
-        "json3": "~3.2.6",
-        "es5-shim": "~2.1.0"
+        "angular": "1.2.25",
+        "json3": "3.2.6",
+        "es5-shim": "2.1.0"
     },
     "devDependencies": {
-        "angular-resource": "1.2.15",
-        "angular-mocks":"~1.2.17"
+        "angular-resource": "1.2.25",
+        "angular-mocks":"1.2.25"
     }
 }
