@@ -13,24 +13,98 @@ angular.module(
 
             var createICCDataItem, getNextId;
 
-            createICCDataItem = function (name, description, indicatorVector, domain, datadescriptorId, categoryId) {
-                return {
-                    'name': name,
-                    'description': description,
-                    'lastmodified': new Date().toISOString(),
-                    'datadescriptor': {
-                        '$ref': '/' + domain + '.datadescriptors/' + datadescriptorId
-                    },
-                    'actualaccessinfocontenttype': 'application/json',
-                    'actualaccessinfo': JSON.stringify(indicatorVector),
-                    'categories': [{
-                        '$ref': '/' + domain + '.categories/' + categoryId
-                    }]
-                };
+            createICCDataItem = function (apiurl, name, description, indicatorVector, categoryId, datadescriptorId) {
+                var catResource, ddResource, deferredCatId, deferredDDId, deferredResult;
+
+                deferredCatId = $q.defer();
+                deferredDDId = $q.defer();
+                deferredResult = $q.defer();
+
+                if (categoryId) {
+                    deferredCatId.resolve(categoryId);
+                } else {
+                    // we assume that the category with the default key is present
+                    catResource = $resource(apiurl + 'categories', {limit: '1', filter: 'key:icc_data'},
+                        {
+                            'query': {method: 'GET', isArray: true, transformResponse: function (data) {
+                                // we strip the ids of the objects only
+                                var col, res, i;
+
+                                col = JSON.parse(data).$collection;
+                                res = [];
+
+                                for (i = 0; i < col.length; ++i) {
+                                    res.push(col[i]);
+                                }
+
+                                return res;
+                            }}
+                        });
+                    catResource.query().$promise.then(function (data) {
+                        if (data.length === 1) {
+                            deferredCatId.resolve(data[0].$ref.substr(data[0].$ref.lastIndexOf('/') + 1));
+                        } else {
+                            deferredCatId.reject('cannot find id of ICC dataitem default category');
+                        }
+                    });
+                }
+
+                if (datadescriptorId) {
+                    deferredDDId.resolve(datadescriptorId);
+                } else {
+                    // we assume that the datadescriptor with the default name is present
+                    ddResource = $resource(apiurl + 'datadescriptors', {limit: '1', filter: 'name:ICC Data Vector descriptor'},
+                        {
+                            'query': {method: 'GET', isArray: true, transformResponse: function (data) {
+                                // we strip the ids of the objects only
+                                var col, res, i;
+
+                                col = JSON.parse(data).$collection;
+                                res = [];
+
+                                for (i = 0; i < col.length; ++i) {
+                                    res.push(col[i]);
+                                }
+
+                                return res;
+                            }}
+                        });
+                    ddResource.query().$promise.then(function (data) {
+                        if (data.length === 1) {
+                            deferredDDId.resolve(data[0].$ref.substr(data[0].$ref.lastIndexOf('/') + 1));
+                        } else {
+                            deferredDDId.reject('cannot find id of ICC dataitem default datadescriptor');
+                        }
+                    });
+                }
+
+                $q.all([
+                    getNextId(apiurl, 'dataitems'),
+                    deferredCatId.promise,
+                    deferredDDId.promise
+                ]).then(function (res) {
+                    deferredResult.resolve({
+                        '$self': res[0],
+                        'name': name,
+                        'description': description,
+                        'lastmodified': new Date().toISOString(),
+                        'datadescriptor': {
+                            '$ref': '/CRISMA.datadescriptors/' + res[2]
+                        },
+                        'actualaccessinfocontenttype': 'application/json',
+                        'actualaccessinfo': JSON.stringify(indicatorVector),
+                        'categories': [{
+                            '$ref': '/CRISMA.categories/' + res[1]
+                        }]
+                    });
+                });
+
+                return deferredResult.promise;
             };
 
             getNextId = function (apiurl, classkey) {
                 var def, Resource, objects;
+
                 def = $q.defer();
                 Resource = $resource(apiurl + classkey, {limit: '999999999'},
                     {
