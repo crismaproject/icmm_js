@@ -11,7 +11,23 @@ angular.module(
         function ($q, $resource) {
             'use strict';
 
-            var getNextId;
+            var createICCDataItem, getNextId;
+
+            createICCDataItem = function (name, description, indicatorVector, domain, datadescriptorId, categoryId) {
+                return {
+                    'name': name,
+                    'description': description,
+                    'lastmodified': new Date().toISOString(),
+                    'datadescriptor': {
+                        '$ref': '/' + domain + '.datadescriptors/' + datadescriptorId
+                    },
+                    'actualaccessinfocontenttype': 'application/json',
+                    'actualaccessinfo': JSON.stringify(indicatorVector),
+                    'categories': [{
+                        '$ref': '/' + domain + '.categories/' + categoryId
+                    }]
+                };
+            };
 
             getNextId = function (apiurl, classkey) {
                 var def, Resource, objects;
@@ -51,6 +67,7 @@ angular.module(
             };
 
             return {
+                createICCDataItem: createICCDataItem,
                 getNextId: getNextId
             };
         }
