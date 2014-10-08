@@ -58,11 +58,13 @@ angular.module(
                         iccdata = worldstate.iccdata;
                         data = null;
                         for (j = 0; j < iccdata.length && !data; ++j) {
-                            for (k = 0; k < iccdata[j].categories.length && !data; ++k) {
-                                if (forCriteria && 'Criteria' === iccdata[j].categories[k].key) {
-                                    data = iccdata[j];
-                                } else if (!forCriteria && 'Indicators' === iccdata[j].categories[k].key) {
-                                    data = iccdata[j];
+                            if(iccdata[j] && iccdata[j].categories){
+                                for (k = 0; k < iccdata[j].categories.length && !data; ++k) {
+                                    if (forCriteria && 'Criteria' === iccdata[j].categories[k].key) {
+                                        data = iccdata[j];
+                                    } else if (!forCriteria && 'Indicators' === iccdata[j].categories[k].key) {
+                                        data = iccdata[j];
+                                    }
                                 }
                             }
                         }
