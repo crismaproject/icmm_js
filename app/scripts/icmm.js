@@ -98,7 +98,7 @@ angular.module(
                         }]
                     });
                 }, function (err) {
-                    throw err;
+                    deferredResult.reject(err);
                 });
 
                 return deferredResult.promise;
