@@ -11,7 +11,7 @@ angular.module(
         function ($q, $resource) {
             'use strict';
 
-            var createICCDataItem, getNextId;
+            var createICCDataItem, getNextId, convertToCorrectIccDataFormat;
 
             createICCDataItem = function (apiurl, name, description, indicatorVector, categoryId, datadescriptorId) {
                 var catResource, ddResource, deferredCatId, deferredDDId, deferredResult;
@@ -147,9 +147,69 @@ angular.module(
                 return def.promise;
             };
 
+            convertToCorrectIccDataFormat = function (worldstate) {
+                var i, iccData, oldIndicators, indicatorCategoryExists;
+
+                iccData = worldstate.iccdata;
+
+                if (!iccData) {
+                    throw new Error('Worldstate has no iccData field. Can not check the indicator format.');
+                }
+                if (Object.prototype.toString.call(iccData) === '[object Object]') {
+                    //we need to check if the categories are correctly set, else we need to augment the iccdata object
+                    if (!iccData.categories) {
+                        iccData.categories = [{
+                            'key': 'Indicators'
+                        }];
+                    } else {
+                        indicatorCategoryExists = false;
+                        iccData.categories.forEach(function (c) {
+                            if (c && c.key && c.key === 'Indicators') {
+                                indicatorCategoryExists = true;
+                            }
+                        });
+                        if (!indicatorCategoryExists) {
+                            iccData.categories.push({
+                                'key': 'Indicators'
+                            });
+                        }
+                    }
+                    worldstate.iccdata = [worldstate.iccdata];
+                } else if (Object.prototype.toString.call(iccData) === '[object Array]') {
+                    if (iccData.length <= 0) {
+                        throw new Error('Worldstate icc data is an empty array.');
+                    }
+                    // the iccdata object is already a array. We need to check if the indicators are marked with a category
+                    // if not we assume the first element of the array represents the indicators
+                    iccData.forEach(function (item) {
+                        if (item && item.categories) {
+                            for (i = 0; i < item.categories.length; i++) {
+                                if (item.categories[i].key === 'Indicators') {
+                                    oldIndicators = item;
+                                }
+                            }
+                        }
+                    });
+
+                    if (!oldIndicators) {
+                        worldstate.iccdata[0].categories = [{
+                            'key': 'Indicators',
+                            'classification': {
+                                '$self': '/CRISMA.classifications/2',
+                                'id': 2,
+                                'key': 'ICC_DATA'
+                            }
+                        }];
+                    }
+                }
+
+                return worldstate;
+            };
+
             return {
                 createICCDataItem: createICCDataItem,
-                getNextId: getNextId
+                getNextId: getNextId,
+                convertToCorrectIccDataFormat:convertToCorrectIccDataFormat
             };
         }
     ]
