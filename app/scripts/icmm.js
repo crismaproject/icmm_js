@@ -24,7 +24,8 @@ angular.module(
                     deferredCatId.resolve(categoryId);
                 } else {
                     // we assume that the category with the default key is present
-                    catResource = $resource(apiurl + 'categories', {limit: '1', filter: 'key:icc_data'},
+
+                    catResource = $resource(apiurl + '/CRISMA.categories', {limit: '1', filter: 'key:icc_data'},
                         {
                             'query': {method: 'GET', isArray: true, transformResponse: function (data) {
                                 // we strip the ids of the objects only
@@ -53,7 +54,8 @@ angular.module(
                     deferredDDId.resolve(datadescriptorId);
                 } else {
                     // we assume that the datadescriptor with the default name is present
-                    ddResource = $resource(apiurl + 'datadescriptors', {limit: '1', filter: 'name:ICC Data Vector descriptor'},
+
+                    ddResource = $resource(apiurl + '/CRISMA.datadescriptors', {limit: '1', filter: 'name:ICC Data Vector descriptor'},
                         {
                             'query': {method: 'GET', isArray: true, transformResponse: function (data) {
                                 // we strip the ids of the objects only
@@ -79,12 +81,14 @@ angular.module(
                 }
 
                 $q.all([
-                    getNextId(apiurl, 'dataitems'),
+
+                    getNextId(apiurl, '/CRISMA.dataitems'),
                     deferredCatId.promise,
                     deferredDDId.promise
                 ]).then(function (res) {
                     deferredResult.resolve({
-                        '$self': res[0],
+
+                        '$self': '/CRISMA.dataitems/' + res[0],
                         'name': name,
                         'description': description,
                         'lastmodified': new Date().toISOString(),
@@ -97,6 +101,9 @@ angular.module(
                             '$ref': '/CRISMA.categories/' + res[1]
                         }]
                     });
+
+                }, function (err) {
+                    deferredResult.reject(err);
                 });
 
                 return deferredResult.promise;
