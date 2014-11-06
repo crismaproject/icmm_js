@@ -56,7 +56,7 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', [
       var hasChilds, node, that, getChildrenFunc = function (callback) {
           that = this;
           $timeout(function () {
-            Nodes.children({ filter: 'parentworldstate.id:' + Nodes.utils.getRequestIdForNodeKey(that.key) }, callback);
+            Nodes.children({ filter: 'parentworldstate.id:' + nodesFacade.utils.getRequestIdForNodeKey(that.key) }, callback);
           }, 1000);
         };
       if (!ws) {
