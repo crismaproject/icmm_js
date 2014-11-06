@@ -190,11 +190,13 @@ angular.module('de.cismet.cids.rest.collidngNames.Nodes', [
 ]);
 angular.module('de.cismet.crisma.ICMM.Worldstates', [
   'ngResource',
-  'de.cismet.crisma.ICMM.config'
+  'de.cismet.crisma.ICMM.config',
+  'de.cismet.crisma.ICMM.services'
 ]).factory('de.cismet.crisma.ICMM.Worldstates', [
   '$resource',
   'de.cismet.crisma.ICMM.config.IcmmSettings',
-  function ($resource, IcmmSettings) {
+  'de.cismet.crisma.ICMM.services.icmm',
+  function ($resource, IcmmSettings, Icmm) {
     'use strict';
     var processResult, processResults, worldstate, worldstateUtils, worldstateFacade, createWorldstateResource;
     processResult = function (worldstateData) {
@@ -257,7 +259,7 @@ angular.module('de.cismet.crisma.ICMM.Worldstates', [
         var data, dataVector, i, iccdata, j, k, worldstate;
         dataVector = [];
         for (i = 0; i < worldstates.length; ++i) {
-          worldstate = worldstates[i];
+          worldstate = Icmm.convertToCorrectIccDataFormat(worldstates[i]);
           iccdata = worldstate.iccdata;
           data = null;
           for (j = 0; j < iccdata.length && !data; ++j) {
