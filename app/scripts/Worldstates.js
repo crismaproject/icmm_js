@@ -1,18 +1,17 @@
 angular.module(
     'de.cismet.crisma.ICMM.Worldstates',
     [
-        'ngResource'
+        'ngResource',
+        'de.cismet.crisma.ICMM.config'
     ]
     ).factory(
     'de.cismet.crisma.ICMM.Worldstates',
     [
         '$resource',
-        'CRISMA_ICMM_API',
-        'CRISMA_DOMAIN',
-        function ($resource, CRISMA_ICMM_API, CRISMA_DOMAIN) {
+        'de.cismet.crisma.ICMM.config.IcmmSettings',
+        function ($resource, IcmmSettings) {
             'use strict';
-            var processResult, processResults, worldstate, worldstateUtils ;
-
+            var processResult, processResults, worldstate, worldstateUtils, worldstateFacade, createWorldstateResource;
             processResult = function (worldstateData) {
                 if (!worldstateData) {
                     return null;
@@ -20,33 +19,56 @@ angular.module(
                 var worldstate = JSON.parse(worldstateData);
                 return worldstate;
             };
-            
             processResults = function (worldstates) {
                 var worldstatesArr = JSON.parse(worldstates).$collection;
                 return worldstatesArr;
             };
-            
-            worldstate = $resource(CRISMA_ICMM_API + '/' + CRISMA_DOMAIN + '.worldstates/:wsId', {
-                wsId: '@id',
-                deduplicate: false,
-                level: '5',
-                omitNullValues: 'false'
-            }, {
-                'get': {
-                    method: 'GET',
-                    transformResponse: processResult
-                },
-                'query': {
-                    method: 'GET',
-                    isArray: true,
-                    params: {
-                        level: '1',
-                        omitNullValues: 'true'
+
+            createWorldstateResource = function () {
+                var r;
+                r = $resource(IcmmSettings.getIcmmApi() + '/' + IcmmSettings.getDomain() + '.worldstates/:wsId', {
+                    wsId: '@id',
+                    deduplicate: false,
+                    level: '5',
+                    omitNullValues: 'false'
+                }, {
+                    'get': {
+                        method: 'GET',
+                        transformResponse: processResult
                     },
-                    transformResponse: processResults
+                    'query': {
+                        method: 'GET',
+                        isArray: true,
+                        params: {
+                            level: '1',
+                            omitNullValues: 'true'
+                        },
+                        transformResponse: processResults
+                    }
+                });
+                return r;
+            };
+            worldstate = createWorldstateResource();
+
+            worldstateFacade = {
+                'get': function () {
+                    return worldstate.get.apply(this, arguments);
+                },
+                'query': function () {
+                    return worldstate.query.apply(this, arguments);
+                },
+                'remove': function () {
+                    return worldstate.remove.apply(this, arguments);
+                },
+                'delete': function () {
+                    return worldstate.delete.apply(this, arguments);
                 }
+            };
+
+            IcmmSettings.addApiListener(function () {
+                worldstate = createWorldstateResource();
             });
-            
+
             worldstateUtils = function () {
                 var publicApi;
                 publicApi = {};
@@ -58,7 +80,7 @@ angular.module(
                         iccdata = worldstate.iccdata;
                         data = null;
                         for (j = 0; j < iccdata.length && !data; ++j) {
-                            if(iccdata[j] && iccdata[j].categories){
+                            if (iccdata[j] && iccdata[j].categories) {
                                 for (k = 0; k < iccdata[j].categories.length && !data; ++k) {
                                     if (forCriteria && 'Criteria' === iccdata[j].categories[k].key) {
                                         data = iccdata[j];
@@ -80,8 +102,9 @@ angular.module(
                 };
                 return publicApi;
             };
-            worldstate.utils = worldstateUtils();
-            return worldstate;
+            
+            worldstateFacade.utils = worldstateUtils();
+            return worldstateFacade;
         }
     ]
-);
+    );
