@@ -27,23 +27,15 @@ function IcmmSettings (icmmApiUrl, d) {
 angular.module(
     'de.cismet.crisma.ICMM.config',
     []
-).provider(
+    ).provider(
     'de.cismet.crisma.ICMM.config.IcmmSettings',
     function IcmmSettingsProvider () {
         'use strict';
-        var icmmApi, domain;
-        icmmApi = 'foo';
-        domain = 'CRISMA';
-        this.setInitialIcmmApi = function (url) {
-            icmmApi = url;
-        };
-        this.setInitialDomain = function (d) {
-            domain = d;
-        };
         this.$get = [
-            '$q',
-            function cmmSettingsFactory () {
-                return new IcmmSettings(icmmApi, domain);
+            'CRISMA_ICMM_API',
+            'CRISMA_DOMAIN',
+            function icmmSettingsFactory (CRISMA_ICMM_API, CRISMA_DOMAIN) {
+                return new IcmmSettings(CRISMA_ICMM_API, CRISMA_DOMAIN);
             }
         ];
     }
